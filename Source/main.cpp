@@ -11,7 +11,7 @@
 HANDLE hProcess;
 DWORD pID;
 HANDLE hHandle;
-HWND hWindow;  // дефолтные для работы с окнами
+HWND hWindow;  // all this for working with windows
 
 // offsets
 DWORD players_list;
@@ -32,26 +32,26 @@ DWORD my_coord_z = 0x6C;
 
 int main()
 {
-	SetConsoleTitle("SSCR");	//титул
-	hWindow = FindWindow(0, "Counter-Strike Source");	// нашел окно ебаное
-	GetWindowThreadProcessId(hWindow, &pID);			//дай пид плес
-	hHandle = OpenProcess(PROCESS_ALL_ACCESS, 0, pID);	//хендл мне гони, сучара
+	SetConsoleTitle("SSCR");	//title
+	hWindow = FindWindow(0, "Counter-Strike Source");	//find window by name
+	GetWindowThreadProcessId(hWindow, &pID);			//get pod
+	hHandle = OpenProcess(PROCESS_ALL_ACCESS, 0, pID);	//get handle 
 
-	DWORD ClientDLL = FindModule(pID, "client.dll");
+	DWORD ClientDLL = FindModule(pID, "client.dll"); //find module ad
 	DWORD EngineDLL = FindModule(pID, "engine.dll");
 	
 	HWND hWnd = GetConsoleWindow();
-	HDC hDC = GetDC(hWnd);
-	HPEN red_pen = CreatePen(PS_SOLID, 6, RGB(255, 0, 0));
+	HDC hDC = GetDC(hWnd); 
+	HPEN red_pen = CreatePen(PS_SOLID, 6, RGB(255, 0, 0)); //creating pens fo drawing
 	HPEN blude_pen = CreatePen(PS_SOLID, 6, RGB(0, 0, 255));
 	HPEN white_pen = CreatePen(PS_SOLID, 4, RGB(255, 255, 255));
 	HPEN yellow_pen = CreatePen(PS_SOLID, 5, RGB(255, 255, 0));
 
-	SetMapMode(hDC, MM_LOMETRIC);
-	SetViewportOrgEx(hDC, 600, 450, NULL);
+	SetMapMode(hDC, MM_LOMETRIC); //change coordination
+	SetViewportOrgEx(hDC, 600, 450, NULL); // set begin of coords to this poing
 
 	ReadProcessMemory(hHandle, (LPCVOID)(ClientDLL + players_offset), &players_list, sizeof(players_list), 0);
-	ReadProcessMemory(hHandle, (LPCVOID)(ClientDLL + my_coord_offset), &my_coord_list, sizeof(my_coord_list), 0);
+	ReadProcessMemory(hHandle, (LPCVOID)(ClientDLL + my_coord_offset), &my_coord_list, sizeof(my_coord_list), 0); //read multi pointers
 
 	while (true)
 	{
@@ -67,44 +67,42 @@ int main()
 
 				hp_buf = RPM_int(hHandle, (players_list + players_list_offset + hp_offset + player_size * i));
 				side_buf = RPM_int(hHandle, (players_list + players_list_offset + side_offset + player_size * i));
-				rotate_buf = RPM_float(hHandle, (players_list + players_list_offset + rotate_offset + player_size * i))+180.0;
+				rotate_buf = RPM_float(hHandle, (players_list + players_list_offset + rotate_offset + player_size * i))+180.0; //in cs anngle is between -180 and 180
 
 				if (hp_buf > 0 && side_buf != 1)
 				{
-					x_buf = RPM_float(hHandle, players_list + players_list_offset + x_offset + player_size * i);
+					x_buf = RPM_float(hHandle, players_list + players_list_offset + x_offset + player_size * i);//read all coord 1 by 1
 					y_buf = RPM_float(hHandle, (players_list + players_list_offset + y_offset + player_size * i));
 					z_buf = RPM_float(hHandle, (players_list + players_list_offset + z_offset + player_size * i));
 
-					my_x = RPM_float(hHandle, my_coord_list + my_coord_x);
+					my_x = RPM_float(hHandle, my_coord_list + my_coord_x);//read my coord
 					my_y = RPM_float(hHandle, my_coord_list + my_coord_y);
 					my_z = RPM_float(hHandle, my_coord_list + my_coord_z);
 
 					draw_x = (x_buf - my_x) / 1.6;
-					draw_y = (y_buf - my_y) / 1.6;
+					draw_y = (y_buf - my_y) / 1.6;//finding pos from my player (vectors)
 
 					char hp[4];
-					_itoa_s(hp_buf, hp, 10);
+					_itoa_s(hp_buf, hp, 10); // int to char for drawing
 
 					if (side_buf == 2)
 					{
 						SelectObject(hDC, red_pen);
-						Box(hDC, draw_x, draw_y, 20);
-						SelectObject(hDC, white_pen);
+						Box(hDC, draw_x, draw_y, 20);//drawing box
 
-						TextOut(hDC, draw_x + 25, draw_y + 25, name_buf, sizeof(name_buf));
-						TextOut(hDC, draw_x - 20, draw_y - 20, hp, sizeof(hp));
+						TextOut(hDC, draw_x + 25, draw_y + 25, name_buf, sizeof(name_buf));//drawing name
+						TextOut(hDC, draw_x - 20, draw_y - 20, hp, sizeof(hp));//drawing hp
 					}
 					if (side_buf == 3)
 					{
 						SelectObject(hDC, blude_pen);
-						Box(hDC, draw_x, draw_y, 20);
-						SelectObject(hDC, white_pen);
+						Box(hDC, draw_x, draw_y, 20);//drawing box
 	
-						TextOut(hDC, draw_x + 25, draw_y + 25, name_buf, sizeof(name_buf));
-						TextOut(hDC, draw_x - 20, draw_y - 20, hp, sizeof(hp));
+						TextOut(hDC, draw_x + 25, draw_y + 25, name_buf, sizeof(name_buf));//drawing name
+						TextOut(hDC, draw_x - 20, draw_y - 20, hp, sizeof(hp));//drawing hp
 					}
 					SelectObject(hDC, yellow_pen);
-					Rotate(hDC, rotate_buf, draw_x, draw_y);
+					Rotate(hDC, rotate_buf, draw_x, draw_y); // drawing view point
 				}
 		}
 		Sleep(100);
