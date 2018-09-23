@@ -5,7 +5,7 @@ int RPM_int(HANDLE handle,LPCVOID adress, int buf);
 float RPM_float(HANDLE handle, LPCVOID adress, float buf);
 char * RPM_char(HANDLE handle, DWORD adress);
 
-//Функция поиска модуля в процессе
+//Find Module of proces func
 DWORD FindModule(const DWORD ProcessId, const char *szModuleName)
 {
 	HANDLE hSnap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, ProcessId);
@@ -33,21 +33,21 @@ DWORD FindModule(const DWORD ProcessId, const char *szModuleName)
 	CloseHandle(hSnap);
 	return dwReturn;
 } 
-// Рпм для целого более компактный 
+// rpm int
 int RPM_int(HANDLE handle, DWORD adress)
 {
 	int result;
 	ReadProcessMemory(handle, (LPCVOID)adress, &result, sizeof(result), 0);
 	return result;
 }
-// Рпм для флота более компактный
+// rpm float
 float RPM_float(HANDLE handle, DWORD adress)
 {
 	float result;
 	ReadProcessMemory(handle, (LPCVOID)adress, &result, sizeof(result), 0);
 	return result;
 }
-// Рпм для символов (не работает, фикси передачу массива)
+// rpm char , ur fucked up it does not work correct 
 char * RPM_char(HANDLE handle, DWORD adress)
 {
 	char result[128];
